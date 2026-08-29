@@ -1,57 +1,63 @@
-# QA Automation — Academia sin Humo
+# Academia sin Humo — suite de pruebas E2E + API
 
-Suite de pruebas automatizadas sobre [Academia sin Humo](https://playground.calidadsinhumo.com),
-construida con Playwright y TypeScript como parte de la Ruta QA Automation con IA.
+Suite personal de pruebas automatizadas sobre el playground
+[Academia sin Humo](https://playground.calidadsinhumo.com), escrita en TypeScript con
+Playwright. Es el cierre de la Ruta QA Automation: un smoke estable que corre igual en
+local y en GitHub Actions, y un pipeline que deja evidencia descargable — porque el objetivo
+no es fabricar un check verde, sino poder explicar qué se ejecutó y qué demuestra esa
+ejecución.
 
-## Estado actual
+## Qué cubre la suite
 
-Smoke CI estable que verifica que la aplicación responde (UI y API) y que el pipeline de
-GitHub Actions genera evidencia real (`playwright-report`). Corresponde al cierre de la
-unidad S16 — *Explicar tu primer CI*: el mismo comando corre local y en CI, y el run se
-clasifica con evidencia, no por el color del check.
+Tres pruebas pensadas para no depender de datos previos ni de sesión:
 
-El siguiente paso es el proyecto final: el flujo integrado de inscripción (REQ-C06, paridad
-de validación entre UI y API).
+- **Disponibilidad** — la home responde `200` y muestra su título y contenido principal.
+- **Registro** — `/registro` pinta el formulario completo: nombre, email, contraseña y edad.
+- **API** — `POST /api/enroll` sin `courseId` responde `400`, tal como pide REQ-A03.
 
-## Qué prueba y por qué
+## Decisiones que tomé (y por qué)
 
-El objetivo del smoke es demostrar que la app está operativa sin depender de estado previo:
+- **`retries: 0`** — si el smoke es estable, un verde con reintentos no demuestra nada; el run
+  verde es un verde real.
+- **`if: ${{ !cancelled() }}`** en el upload del reporte — la evidencia se publica aunque fallen
+  los tests; solo se omite cuando el run se cancela.
+- **`if-no-files-found: error`** — si el reporte no se genera, el job falla en vez de pasar en
+  silencio.
+- **`permissions: contents: read`** — el token de CI solo lee el repositorio: permiso mínimo.
+- **Sin `skip` ni aserciones debilitadas** — si algo no se puede probar aún, se declara fuera
+  de alcance; no se esconde.
 
-- **Disponibilidad (E2E)** — la home responde `200`, carga el título y el contenido principal.
-- **Renderizado (E2E)** — `/registro` muestra el formulario completo (nombre, email, contraseña, edad).
-- **Contrato de API** — `POST /api/enroll` sin `courseId` responde `400` (REQ-A03 de la especificación).
+## Estructura del repo
 
-## Qué NO prueba
+```
+tests/ci/ci-smoke.spec.ts     # smoke estable (E2E + API)
+playwright.config.ts          # baseURL, proyecto chromium, reporter HTML
+.github/workflows/playwright.yml
+docs/cierre-s16.md            # entrega: análisis de los 8 pasos
+```
 
-Quedan fuera del alcance actual: el rate limiting de login (REQ-L03), la máquina de estados
-de `/mi-progreso` (REQ-P01–P05), la paridad UI-API de la inscripción (REQ-C06, pendiente para
-el proyecto final) y las zonas de menor riesgo (`/reserva`, `/estudiantes`, `/perfil`).
-
-## Arquitectura
-
-- **Smoke de CI** (`tests/ci/`) — `ci-smoke.spec.ts`, tres tests estables sin sesión ni datos previos.
-- **Configuración** (`playwright.config.ts`) — `baseURL` al playground, proyecto `chromium`,
-  reporter HTML (`playwright-report/`).
-- **CI en GitHub Actions** (`.github/workflows/playwright.yml`) — corre en cada push/PR a `main`
-  (también con `workflow_dispatch`), instala dependencias con `npm ci`, instala Chromium y sube
-  el artifact `playwright-report` aunque los tests fallen (`if: !cancelled()`).
-- **Documentación** (`docs/`) — `cierre-s16.md` con el análisis completo de la entrega.
-
-## Cómo correrlo
+## Cómo correrlo en local
 
 ```bash
 npm install
 npx playwright install chromium
 npm run test:smoke   # solo el smoke de CI
-npm test             # toda la suite
-npm run report       # ver el último reporte HTML
+npm run report       # abre el último reporte HTML
 ```
 
-Ejemplo de run verde en CI:
+## CI en GitHub Actions
+
+`.github/workflows/playwright.yml` dispara con **push** y **pull request** a `main` (y
+manualmente vía `workflow_dispatch`). El job instala Node + `npm ci`, baja Chromium, ejecuta
+el smoke y publica `playwright-report` como artifact (retención 14 días).
+
+Run de referencia (verde, `SIN FALLO`):
 https://github.com/D4v1D-lab/academia-sin-humo-qa/actions/runs/33259709688
 
-## Integridad
+El análisis completo de la entrega está en [`docs/cierre-s16.md`](docs/cierre-s16.md).
 
-- No se usa `skip` ni se debilitan aserciones para obtener verde.
-- El reporte HTML se genera como artifact de Actions y **no se sube al repositorio**.
-- No hay tokens, contraseñas ni `.env` versionados (ver `.gitignore`).
+## Lo que sigue
+
+El proyecto final va a girar alrededor del flujo integrado de inscripción (REQ-C06): la API y
+la UI deben aplicar las mismas reglas de prerequisitos, y ese contrato UI-API es el riesgo que
+quiero verificar primero.
