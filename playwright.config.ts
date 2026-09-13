@@ -13,7 +13,8 @@ export default defineConfig({
   ],
   use: {
     baseURL: 'https://playground.calidadsinhumo.com',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

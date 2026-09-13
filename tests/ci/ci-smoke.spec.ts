@@ -8,7 +8,7 @@ import { test, expect } from '@playwright/test';
  * datos previos ni de estado de sesión.
  *
  * Alcance:
- *  1. La home carga y muestra su contenido principal.
+ *  1. La home carga y muestra su hero, navegación principal y CTA.
  *  2. El formulario de registro se renderiza completo.
  *  3. La API de inscripción responde y valida el cuerpo de la petición (REQ-A03).
  */
@@ -22,10 +22,17 @@ test.describe('Smoke CI — Academia sin Humo', () => {
     await expect(
       page.getByRole('heading', { name: /¿Quieres aprender automatización/ }),
     ).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Docs' })).toBeVisible();
+    // Navegación principal y CTA del hero: elementos actuales y estables
+    // (el enlace "Docs" que se asertaba antes ya no existe en el playground).
+    await expect(
+      page.getByRole('link', { name: 'Ver cursos', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Empezar a practicar', exact: true }),
+    ).toBeVisible();
   });
 
-  test('la pagina de registro muestra el formulario completo', async ({ page }) => {
+  test('la página de registro muestra el formulario completo', async ({ page }) => {
     const response = await page.goto('/registro');
 
     expect(response?.status()).toBe(200);
@@ -37,9 +44,12 @@ test.describe('Smoke CI — Academia sin Humo', () => {
     await expect(page.getByRole('button', { name: 'Crear cuenta' })).toBeVisible();
   });
 
-  test('la API de inscripcion valida el cuerpo de la peticion (REQ-A03)', async ({ request }) => {
-    // Sin courseId -> 400, segun REQ-A03 de la especificacion.
+  test('la API de inscripción valida el cuerpo de la petición (REQ-A03)', async ({ request }) => {
+    // Sin courseId -> 400 con mensaje claro, según REQ-A03 de la especificación.
     const response = await request.post('/api/enroll', { data: {} });
+
     expect(response.status()).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: 'El campo courseId es obligatorio' });
   });
 });
