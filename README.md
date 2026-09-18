@@ -50,6 +50,7 @@ Este proyecto se armó en conversación con un agente de IA (asistente de códig
 
 ## Documentación del proyecto
 
+- `openspec/` — la especificación del producto en formato **OpenSpec** (spec-driven development): 9 capacidades con los 36 requisitos REQ-* trazables a casos, tests y hallazgos.
 - `docs/estrategia.md` — riesgo, matriz de decisión y alcance declarado.
 - `docs/casos-de-prueba.md` — casos con técnicas (valores límite, tabla de decisión, transición de estados) y evaluación del juez.
 - `docs/reporte-de-bugs.md` — los 12 hallazgos con evidencia.
