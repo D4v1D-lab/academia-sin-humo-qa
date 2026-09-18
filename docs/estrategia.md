@@ -48,4 +48,4 @@
 
 - **`workers: 1`**: la suite corre en serie porque comparte el playground real y el rate limiter del login es por IP; serializar evita que un test falle por el bloqueo que genera otro.
 - **Limpieza:** no existe endpoint de borrado; se usan datos dinámicos (emails únicos por ejecución) y la sesión se reinicia al final del flujo crítico.
-- **Los tests que documentan bugs** (carpetas `tests/api`/`tests/integrado` nombradas como `BUG-xx`) fallan a propósito contra la spec: cada falla es un hallazgo reportado con evidencia en `docs/reporte-de-bugs.md`.
+- **Los tests que documentan bugs** (`z-bugs-api.spec.ts`, `z-sesion-bug03.spec.ts` y `req-c06.spec.ts`) usan `test.fail()`: afirman la spec, Playwright espera el fallo y la suite queda verde; si el producto corrige el bug, el runner lo marca "unexpectedly passed" y el CI avisa. Cada hallazgo tiene su evidencia en `docs/reporte-de-bugs.md`.

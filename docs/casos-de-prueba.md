@@ -144,16 +144,21 @@ Alcance y técnicas según `docs/estrategia.md`.
 
 ---
 
-## Veredicto del juez (rúbrica S9)
+## Evaluación del juez (revisión estática según skill de QA ISTQB)
 
-Evaluación de los casos contra la rúbrica propia (cobertura, claridad, casos límite, trazabilidad al REQ):
+El "juez" de la ruta se construyó como una skill de revisión de casos de prueba. Para esta entrega apliqué la revisión estática de la skill `qa-manual-istqb` (del repo de referencia fugazi/test-automation-skills-agents: flujo de *static testing* y *quality gates* del framework CTFL): checklist de atomicidad, oráculo observable, trazabilidad al requisito y cobertura, actuando como mi propio revisor.
 
-- **Lo que la rúbrica aprobó:** trazabilidad completa (todo caso cita su REQ), dos técnicas aplicadas correctamente (valores límite y tabla de decisión), y redacción con pasos reproducibles.
-- **Lo que señaló como faltante:**
-  1. No había casos ejecutados para los límites **inferiores** de nombre (1 char) ni de edad (15/100): solo quedaron diseñados.
-  2. La trazabilidad de CP-12 era indirecta (citaba REQ-C06 sin transcribir la regla).
-  3. Ningún caso límite de la tabla de decisión (C02) contaba con ejecución automatizada.
-- **Decisión tomada (supervisión de la IA):**
-  - **Aceptado:** transcribir la regla textual de REQ-C06 en CP-12 y en el test integrado, para que la trazabilidad sea literal.
-  - **Rechazado:** ampliar la ejecución automatizada a CP-03/CP-05 y a C02 completo. Justificación escrita: el alcance se define por riesgo (estrategia Fase 0); los límites de nombre/edad no participan del flujo crítico, y el cupo global es un estado compartido del playground (automatizarlo añadiría flakiness sin valor de decisión). Los casos quedan diseñados y disponibles para ampliación manual.
-- **Evidencia de esta decisión:** este documento y `docs/estrategia.md` (§ Alcance elegido).
+**Calificaciones emitidas por la revisión:**
+
+- **Conexión (trazabilidad REQ ↔ caso):** 26 de 27 REQs en alcance tienen al menos un caso que los cita (96 %). REQ-S02 (reinicio del progreso al cerrar sesión) no tiene caso propio.
+- **Suficiencia de casos:** 17 casos para 8 zonas de la spec; las técnicas exigidas están representadas (valores límite, tabla de decisión, transición de estados, comportamiento temporal, autorización). Las zonas D (reserva), N (paginación) y U (CV) quedaron sin casos por alcance declarado en la Fase 0.
+- **Seguridad/confianza de la suite:** ALTA para el riesgo principal (C04, C06 y L02 tienen tests ejecutables con evidencia), MEDIA para L03 (solo caracterización manual) y BAJA para P02-P05 (transiciones y certificado sin automatización).
+
+**Feedback de la revisión (hallazgos sobre los casos):**
+
+1. **Atomicidad:** CP-08 mezcla comportamiento de UI y de API en un solo caso. → **Aceptado parcialmente:** se separó el comportamiento del contrato API en CP-09 y se documentó que el resto del rate limiting es caracterización (BUG-05).
+2. **Oráculo explícito:** CP-03 y CP-05 (límites de nombre y edad) no tienen resultado obtenido verificado. → **Aceptado:** se marcaron como NO EJECUTADO y se declararon fuera del alcance automatizado en la estrategia; la suite no los afirma como verificados.
+3. **Cobertura faltante:** no hay caso para REQ-S02 (el progreso se reinicia al cerrar sesión). → **Rechazado:** verificarlo requiere un flujo con sesión estable tras logout, y la sesión no sobrevive una recarga (BUG-04); se documenta como hallazgo en lugar de escribir un test frágil.
+4. **Trazabilidad literal:** CP-12 citaba REQ-C06 sin transcribir la regla. → **Aceptado:** la regla textual de REQ-C06 quedó citada en CP-12 y en `tests/integrado/req-c06.spec.ts`.
+
+**Decisión final (supervisión del autor):** los puntos 2 y 4 se incorporaron al documento y a los tests; los puntos 1 y 3 se resolvieron con alcance declarado, no con tests frágiles. La justificación de cada decisión queda escrita aquí y en `docs/estrategia.md` (§ Alcance elegido).

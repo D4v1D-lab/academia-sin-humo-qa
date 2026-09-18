@@ -185,4 +185,4 @@ Clasificación según la regla del proyecto: cada discrepancia con un REQ es un 
 | BUG-11 | S01 | Info | API | caracterizado manualmente |
 | BUG-12 | A03 | Baja | API | `tests/api/z-bugs-api.spec.ts` |
 
-Los tests que documentan bugs (**5 en rojo**) son intencionales: afirman la spec y fallan mientras el producto no la cumpla. No se usan `skip` ni aserciones debilitadas.
+Los tests que documentan bugs (**5** en `tests/api/z-bugs-api.spec.ts`, `tests/integrado/z-sesion-bug03.spec.ts` y `tests/integrado/req-c06.spec.ts`) usan `test.fail()`: ejecutan la aserción que exige la spec, Playwright la espera fallando y la suite queda operativa. Si el producto corrige el bug, el test pasa y el runner lo marca como "unexpectedly passed" — la señal automática de que el hallazgo se resolvió. No se usan `skip` ni aserciones debilitadas.
