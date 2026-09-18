@@ -4,9 +4,10 @@ export default defineConfig({
   testDir: './tests',
   timeout: 30_000,
   expect: { timeout: 5_000 },
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0,
+  workers: 1,
   reporter: [
     ['list'],
     ['html', { open: 'never' }],
