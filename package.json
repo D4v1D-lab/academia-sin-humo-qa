@@ -2,10 +2,12 @@
   "name": "academia-sin-humo-qa",
   "version": "1.0.0",
   "private": true,
-  "description": "Suite de QA automation sobre Academia sin Humo (playground) — Playwright + TypeScript",
+  "description": "Proyecto final: suite de QA automation sobre Academia sin Humo (playground) — Playwright + TypeScript",
   "scripts": {
-    "test": "playwright test",
-    "test:smoke": "playwright test tests/ci",
+    "test": "playwright test --project=chromium",
+    "test:e2e": "playwright test tests/e2e --project=chromium",
+    "test:api": "playwright test tests/api --project=chromium",
+    "test:integrado": "playwright test tests/integrado --project=chromium",
     "report": "playwright show-report"
   },
   "license": "ISC",
