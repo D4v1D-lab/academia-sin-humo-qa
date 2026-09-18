@@ -30,11 +30,16 @@ jobs:
       - name: Instalar Chromium
         run: npx playwright install --with-deps chromium
 
+      - name: Chequeo de tipos
+        run: npx tsc --noEmit
+
       - name: Ejecutar suite del proyecto final
-        # La suite completa (e2e + api + integrado). Los tests que documentan
-        # bugs (z-bugs-api.spec.ts y req-c06.spec.ts) fallan a propósito y son
-        # hallazgos reportados en docs/reporte-de-bugs.md: el run queda rojo
-        # mientras el producto no cumpla la spec. No se usa skip ni `|| true`.
+        # La suite completa (e2e + api + integrado + a11y). Los tests que
+        # documentan bugs (z-bugs-api.spec.ts, z-sesion-bug03.spec.ts y
+        # req-c06.spec.ts) usan test.fail(): la aserción de la spec se
+        # ejecuta y se espera que falle; si el producto corrige el bug, el
+        # test pasa y el run se pone rojo con "unexpectedly passed".
+        # No se usa skip ni `|| true`.
         run: npx playwright test --project=chromium
 
       - name: Subir reporte HTML
