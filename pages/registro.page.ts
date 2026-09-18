@@ -2,30 +2,33 @@ import { Page, expect } from '@playwright/test';
 
 /**
  * Page Object de /registro (REQ-R01 a REQ-R07).
- * Locators semánticos por rol y nombre accesible (S4): nada de selectores
- * frágiles atados a clases de estilos.
+ * Locators por data-testid (capa estable del producto), nunca por clases.
  */
 export class RegistroPage {
   constructor(private readonly page: Page) {}
 
   get nombre() {
-    return this.page.getByRole('textbox', { name: 'Nombre completo' });
+    return this.page.getByTestId('register-name');
   }
 
   get email() {
-    return this.page.getByRole('textbox', { name: 'Email' });
+    return this.page.getByTestId('register-email');
   }
 
   get contrasena() {
-    return this.page.getByRole('textbox', { name: 'Contraseña' });
+    return this.page.getByTestId('register-password');
   }
 
   get edad() {
-    return this.page.getByRole('spinbutton', { name: 'Edad' });
+    return this.page.getByTestId('register-age');
   }
 
   get botonCrearCuenta() {
-    return this.page.getByRole('button', { name: 'Crear cuenta' });
+    return this.page.getByTestId('register-submit');
+  }
+
+  get mensajeExito() {
+    return this.page.getByTestId('register-success');
   }
 
   async goto() {
@@ -41,10 +44,12 @@ export class RegistroPage {
   }
 
   async expectRegistroExitoso() {
-    await expect(this.page.getByText(/¡Registro exitoso!/)).toBeVisible();
+    await expect(this.mensajeExito).toContainText('¡Registro exitoso!');
   }
 
   async expectEmailDuplicado() {
-    await expect(this.page.getByText('Este email ya está registrado')).toBeVisible();
+    await expect(this.page.getByTestId('register-email-error')).toContainText(
+      'ya está registrado',
+    );
   }
 }

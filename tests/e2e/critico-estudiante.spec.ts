@@ -29,15 +29,15 @@ test.describe('Flujo crítico del estudiante', () => {
     // 2. Login y bienvenida (REQ-L02, REQ-L04)
     const login = new LoginPage(page);
     await login.goto();
-    await login.iniciarSesion(email, 'ClaveCorrecta1');
+    await login.iniciarSesionConReintento(email, 'ClaveCorrecta1');
     await login.expectBienvenida('David');
 
     // 3. Catálogo e inscripción sin prerequisito (REQ-C01, REQ-C02)
     const cursos = new CursosPage(page);
     await cursos.navegar();
     await cursos.expectCursoVisible('Fundamentos de Testing');
-    await cursos.inscribirse('Fundamentos de Testing');
-    await cursos.expectInscrito('Fundamentos de Testing');
+    await cursos.inscribirse('fundamentos');
+    await cursos.expectInscrito('fundamentos');
 
     // 4. El curso aparece en mi progreso con estado Inscrito (REQ-P01)
     const progreso = new ProgresoPage(page);

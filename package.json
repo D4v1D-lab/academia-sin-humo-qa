@@ -8,10 +8,12 @@
     "test:e2e": "playwright test tests/e2e --project=chromium",
     "test:api": "playwright test tests/api --project=chromium",
     "test:integrado": "playwright test tests/integrado --project=chromium",
+    "test:a11y": "playwright test tests/a11y --project=chromium",
     "report": "playwright show-report"
   },
   "license": "ISC",
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.55.0",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.0"

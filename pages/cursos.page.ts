@@ -2,10 +2,8 @@ import { Page, expect } from '@playwright/test';
 
 /**
  * Page Object del catálogo /cursos (REQ-C01 a REQ-C06).
- *
- * Las cards de curso no exponen data-testid: se localizan por su título
- * único dentro del grid. Cualquier cambio de estructura se corrige aquí,
- * en un solo lugar.
+ * Los botones de cada curso exponen data-testid `enroll-<courseId>`;
+ * la visibilidad de la card se verifica por su título único.
  */
 export class CursosPage {
   constructor(private readonly page: Page) {}
@@ -16,7 +14,10 @@ export class CursosPage {
 
   async navegar() {
     // Navegación por enlace (SPA): la sesión no sobrevive una recarga (BUG-04).
-    await this.page.getByRole('link', { name: 'Ver cursos' }).click();
+    // Ojo: el enlace "Ver cursos" (catalogo-link) apunta a /catalogo (catálogo
+    // público, sin botones de inscripción); el catálogo con inscripción es
+    // /cursos, al que se llega desde la nav logueada por "Laboratorio".
+    await this.page.getByRole('link', { name: 'Laboratorio', exact: true }).click();
     await expect(this.titulo).toBeVisible();
   }
 
@@ -25,21 +26,27 @@ export class CursosPage {
     return grid.locator('> div').filter({ hasText: titulo }).first();
   }
 
+  private botonCurso(courseId: string) {
+    return this.page.getByTestId(`enroll-${courseId}`);
+  }
+
   async expectCursoVisible(titulo: string) {
     await expect(this.cardCurso(titulo)).toBeVisible();
   }
 
-  async expectRechazoPorPrerequisito(titulo: string) {
+  async expectRechazoPorPrerequisito(courseId: string) {
     // REQ-C03: sin prerequisito completado el curso permanece bloqueado.
-    await expect(this.cardCurso(titulo).getByRole('button', { name: 'Bloqueado' })).toBeVisible();
+    const boton = this.botonCurso(courseId);
+    await expect(boton).toBeDisabled();
+    await expect(boton).toHaveText('Bloqueado');
   }
 
-  async inscribirse(titulo: string) {
-    await this.cardCurso(titulo).getByRole('button', { name: 'Inscribirse' }).click();
+  async inscribirse(courseId: string) {
+    await this.botonCurso(courseId).click();
   }
 
-  async expectInscrito(titulo: string) {
+  async expectInscrito(courseId: string) {
     // Después de inscribirse la card pasa a estado "Ya inscrito".
-    await expect(this.cardCurso(titulo).getByText('Ya inscrito')).toBeVisible();
+    await expect(this.botonCurso(courseId)).toHaveText(/Ya inscrito/);
   }
 }

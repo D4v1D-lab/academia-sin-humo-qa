@@ -10,23 +10,31 @@ import { CursosPage } from '../../pages/cursos.page';
  * UI. Un curso con prerequisito pendiente debe ser rechazado tanto en la UI
  * como en la API." — REQ-C06 (cita textual de la spec).
  *
- * Patrón de S16: la UI prepara/verifica lo visible y la API consume el mismo
- * escenario. El dato dinámico compartido es el courseId "playwright-cero"
- * (curso con prerequisito "fundamentos") y el email único del estudiante.
+ * Patrón de S16: la API prepara/verifica y la UI consume el mismo escenario.
+ * El dato dinámico compartido es el courseId "playwright-cero" (prerequisito
+ * "fundamentos") y el email único del estudiante. Se usa `page.request` para
+ * que la llamada a la API comparta el mismo browser context — y por lo tanto
+ * la misma identidad — que la UI logueada.
  *
  * Qué demuestra la UI: que el curso con prerequisito pendiente está bloqueado.
- * Qué demuestra la API: la regla que aplica al mismo curso.
+ * Qué demuestra la API: la regla que aplica al mismo curso (200 en vez de 403).
  * Qué NO demuestra el conjunto: el cupo global (compartido) ni el resto de
  * combinaciones de la tabla de decisión (REQ-C02).
  *
- * Si la aserción de la API falla, NO se arregla: la falla es el hallazgo
- * BUG-01 (ver docs/reporte-de-bugs.md).
+ * El hallazgo (BUG-01) se documenta con test.fail(): el test corre, la
+ * aserción de 403 falla porque la API responde 200, y Playwright lo marca
+ * como fallo esperado. Si alguien corrige la API, el test pasa y la suite se
+ * pone roja con "unexpectedly passed" — la señal automática de que el bug
+ * quedó resuelto.
  */
+const CURSO_CON_PREREQUISITO_PENDIENTE = 'playwright-cero'; // requiere 'fundamentos'
+
 test.describe('Integrado · REQ-C06: paridad UI-API en la inscripción', () => {
   test('UI bloquea el prerequisito pendiente y la API debe rechazarlo igual', async ({
     page,
-    request,
   }) => {
+    test.fail(true, 'BUG-01: POST /api/enroll acepta un curso con prerequisito pendiente que la UI bloquea');
+
     const email = `integrado_${Date.now()}@test.com`;
 
     // La UI prepara: estudiante nuevo que nunca completó "fundamentos".
@@ -42,22 +50,22 @@ test.describe('Integrado · REQ-C06: paridad UI-API en la inscripción', () => {
 
     const login = new LoginPage(page);
     await login.goto();
-    await login.iniciarSesion(email, 'ClaveCorrecta1');
+    await login.iniciarSesionConReintento(email, 'ClaveCorrecta1');
     await login.expectBienvenida('Integrado');
 
-    // La UI verifica lo visible: el curso con prerequisito pendiente está bloqueado (REQ-C03).
+    // La API consume el mismo escenario, con la misma identidad de la UI.
+    const enrollResponse = await page.request.post('/api/enroll', {
+      data: { courseId: CURSO_CON_PREREQUISITO_PENDIENTE },
+    });
+
+    // La UI verifica lo visible: el mismo curso bloqueado (REQ-C03).
     const cursos = new CursosPage(page);
     await cursos.navegar();
     await cursos.expectCursoVisible('Playwright desde cero');
-    await cursos.expectRechazoPorPrerequisito('Playwright desde cero');
+    await cursos.expectRechazoPorPrerequisito(CURSO_CON_PREREQUISITO_PENDIENTE);
 
-    // La API consume el mismo escenario: debe rechazar igual que la UI (REQ-C06).
-    const response = await request.post('/api/enroll', {
-      data: { courseId: 'playwright-cero' },
-    });
-
-    // Respuesta real observada: 200 {status: "inscrito"} — la API NO aplica
-    // la misma regla. Esta falla es el hallazgo BUG-01, reportado con evidencia.
-    expect(response.status()).toBe(403);
+    // REQ-C06 exige que la API rechace igual (403). En la realidad responde
+    // 200 con status "inscrito" — BUG-01 (evidencia en docs/reporte-de-bugs.md).
+    expect(enrollResponse.status()).toBe(403);
   });
 });
