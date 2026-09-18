@@ -17,7 +17,7 @@ El riesgo principal que elegí es la **paridad UI-API en la inscripción a curso
 
 - **Page Object Model** — `pages/`: `registro`, `login`, `cursos` y `progreso`, con locators por `data-testid` (capa estable del producto) y sin `waitForTimeout`.
 - **Cuatro capas de tests** — `tests/e2e/` (flujo crítico), `tests/api/` (contrato + bugs), `tests/integrado/` (REQ-C06 y BUG-03) y `tests/a11y/` (axe-core, anexo opcional).
-- **CI en GitHub Actions** — corre la suite completa en cada push, chequea tipos con `tsc --noEmit` y sube el artifact `playwright-report`.
+- **CI en GitHub Actions** — corre la suite completa en cada push, chequea tipos con `tsc --noEmit` y sube el artifact `playwright-report`. Run del proyecto: https://github.com/D4v1D-lab/academia-sin-humo-qa/actions/runs/35301055645 (verde: 11 tests, incluidos los 5 que documentan bugs con `test.fail()`).
 
 ## Hallazgos
 
