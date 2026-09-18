@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  smoke:
+  suite:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -30,8 +30,12 @@ jobs:
       - name: Instalar Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Ejecutar smoke
-        run: npx playwright test tests/ci/ci-smoke.spec.ts --project=chromium
+      - name: Ejecutar suite del proyecto final
+        # La suite completa (e2e + api + integrado). Los tests que documentan
+        # bugs (z-bugs-api.spec.ts y req-c06.spec.ts) fallan a propósito y son
+        # hallazgos reportados en docs/reporte-de-bugs.md: el run queda rojo
+        # mientras el producto no cumpla la spec. No se usa skip ni `|| true`.
+        run: npx playwright test --project=chromium
 
       - name: Subir reporte HTML
         uses: actions/upload-artifact@v4
