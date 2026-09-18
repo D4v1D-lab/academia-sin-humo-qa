@@ -1,3 +1,4 @@
+import { request as pwRequest } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 
 /**
@@ -42,31 +43,45 @@ test.describe('BUG-02 · el cupo no decrementa al inscribirse (REQ-C04)', () => 
   });
 });
 
-test.describe('BUG-03 · POST /api/login no autentica usuarios registrados (REQ-L02)', () => {
-  test('login con credenciales correctas de un usuario recién registrado responde 200', async ({
-    request,
-  }) => {
+test.describe('BUG-12 · body JSON null responde 500 en vez de 400 (REQ-A03)', () => {
+  test('un body null (sin courseId) debe rechazarse con 400', async () => {
+    const ctx = await pwRequest.newContext({ baseURL: 'https://playground.calidadsinhumo.com' });
+    const response = await ctx.post('/api/enroll', {
+      data: 'null',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    expect(response.status()).toBe(400); // respuesta real: 500 (error interno)
+    await ctx.dispose();
+  });
+});
+
+test.describe('BUG-03 · POST /api/login exige la cookie de registro (REQ-L02)', () => {
+  // Último del archivo a propósito: su login fallido (1 por corrida) no debe
+  // preceder a los logins exitosos del E2E en la ventana de bloqueo por IP.
+  test('login con credenciales correctas desde una sesión nueva responde 200', async () => {
     const email = `bug03_${Date.now()}@test.com`;
-    const registro = await request.post('/api/register', {
+
+    // Sesión A: registra al usuario (y conserva su cookie ash_session).
+    const ctxA = await pwRequest.newContext({
+      baseURL: 'https://playground.calidadsinhumo.com',
+    });
+    const registro = await ctxA.post('/api/register', {
       data: { name: 'Bug Tres', email, password: 'ClaveCorrecta1', age: 30 },
     });
     expect(registro.status()).toBe(201);
+    await ctxA.dispose();
 
-    const login = await request.post('/api/login', {
+    // Sesión B: sesión nueva, sin la cookie de registro — el escenario real de
+    // un usuario que inicia sesión desde otro dispositivo o navegador.
+    const ctxB = await pwRequest.newContext({
+      baseURL: 'https://playground.calidadsinhumo.com',
+    });
+    const login = await ctxB.post('/api/login', {
       data: { email, password: 'ClaveCorrecta1' },
     });
     // respuesta real: 401 "Email o contraseña incorrectos" pese a ser correctas
     expect(login.status()).toBe(200);
-  });
-});
-
-test.describe('BUG-12 · body malformado responde 500 en vez de 400 (REQ-A03)', () => {
-  test('JSON inválido debe rechazarse con 400', async ({ request }) => {
-    const response = await request.post('/api/enroll', {
-      data: '{esto no es json',
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    expect(response.status()).toBe(400); // respuesta real: 500
+    await ctxB.dispose();
   });
 });
